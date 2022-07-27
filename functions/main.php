@@ -48,12 +48,23 @@ function uploadImage()
   }
 
   $allowedFiles = ['image/jpeg', 'image/png', 'image/webp'];
-  if(!in_array($type, $allowedFiles)){
+  if (!in_array($type, $allowedFiles)) {
     Message::set('File is not image', 'danger');
     redirect('upload-image');
   }
 
-  $name = translit($name);
-  
-  move_uploaded_file($tmp_name, $name);
+  $name = time() . '_' . translit($name);
+  $folderUploads = 'uploads';
+
+  if (!file_exists($folderUploads)) {
+    mkdir($folderUploads);
+  }
+
+  if(!move_uploaded_file($tmp_name, './' . $folderUploads . '/' . $name)){
+    Message::set('Error', 'danger');
+    redirect('upload-image');
+  }
+
+  Message::set('File is upload!');
+  redirect('upload-image');
 }
