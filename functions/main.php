@@ -34,3 +34,26 @@ function sendMail()
 
   redirect('contacts');
 }
+
+
+
+function uploadImage()
+{
+  $file = $_FILES['uploadedFile'] ?? null;
+  extract($file);
+
+  if ($error != 0) {
+    Message::set('Error', 'danger');
+    redirect('upload-image');
+  }
+
+  $allowedFiles = ['image/jpeg', 'image/png', 'image/webp'];
+  if(!in_array($type, $allowedFiles)){
+    Message::set('File is not image', 'danger');
+    redirect('upload-image');
+  }
+
+  $name = translit($name);
+  
+  move_uploaded_file($tmp_name, $name);
+}
