@@ -38,7 +38,6 @@ require_once './functions/main.php';
       </div>
     </div>
   </nav>
-
     
   <div class="container">
     <?php
@@ -47,6 +46,8 @@ require_once './functions/main.php';
         require "./pages/{$page}.php";
       else
         echo '<h1>Page Not Found</h1>';
+        
+      OldInputs::remove();  
     ?>
   </div>
     
