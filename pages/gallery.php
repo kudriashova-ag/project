@@ -2,7 +2,6 @@
 
 <?php Message::get() ?>
 
-
 <form action="index.php" method="post" enctype="multipart/form-data">
   <input type="file" name="filename"><br>
   <button name="action" value="sendFile">Send</button>

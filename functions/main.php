@@ -42,14 +42,14 @@ function sendMail()
   }
   if (empty($message)) {
     $errors[] = 'Message is required';
-  } 
-  
-  if(count($errors)){
+  }
+
+  if (count($errors)) {
     Message::set($errors, 'danger');
     OldInputs::set($_POST);
     redirect('contacts');
   }
-  
+
   mail('kudriashova.ag@gmail.com', 'Mail from site', "Name: $name <br> Email: $email <br> Message: $message");
   Message::set('Thank');
 
@@ -59,21 +59,22 @@ function sendMail()
 
 
 
-function sendFile(){
+function sendFile()
+{
   //dump($_FILES['filename']);
   extract($_FILES['filename']);
 
-  if($error === 4){
+  if ($error === 4) {
     Message::set('File is required', 'danger');
     redirect('gallery');
   }
-  if($error !== 0){
+  if ($error !== 0) {
     Message::set('File is not upload', 'danger');
     redirect('gallery');
   }
 
   $allowedExtensions = ['image/jpeg', 'image/gif', 'image/png', 'image/webp'];
-  if(!in_array($type, $allowedExtensions)){
+  if (!in_array($type, $allowedExtensions)) {
     Message::set('File is not image', 'danger');
     redirect('gallery');
   }
@@ -88,15 +89,16 @@ function sendFile(){
   //$fName = $fileName . '_' . time() . '.' .  $fileExtension; // 5test.asd.jpg
   $fName = md5(time() . $name) . '.' .  $fileExtension;
 
-  if(!file_exists('uploads'))
+  if (!file_exists('uploads'))
     mkdir('uploads');
 
-  if(!move_uploaded_file($tmp_name, 'uploads/' . $fName)){
+  if (!move_uploaded_file($tmp_name, 'uploads/' . $fName)) {
     Message::set('File is not uploaded', 'danger');
     redirect('gallery');
   }
 
   resizeImage('uploads/' . $fName, 300, true);
+  resizeImage('uploads/' . $fName, 300, false);
 
   //$phone = $_POST['phone']; // отримаємо масив
   //dump($phone);
@@ -105,13 +107,62 @@ function sendFile(){
 }
 
 
-function sendFiles(){
+function sendFiles()
+{
   dump($_FILES['filename']);
 }
 
 
-function resizeImage($filePath, $size, $crop){
-  $dest = imagecreatetruecolor($size, $size);
+function resizeImage($filePath, $size, $crop)
+{
+  extract(pathinfo($filePath));
+  $extension = strtolower($extension) === 'jpg' ? 'jpeg' : $extension;
+  $functionCreate = 'imagecreatefrom' . $extension;
 
-  imagejpeg($dest, 'uploads/1.jpg');
+  $src = $functionCreate($filePath);
+
+  list($src_width, $src_height) = getimagesize($filePath);
+  
+
+  if ($crop) {
+    $dest = imagecreatetruecolor($size, $size);
+    if ($src_width > $src_height) {
+      imagecopyresized($dest, $src, 0, 0, $src_width / 2 - $src_height / 2, 0, $size, $size, $src_height, $src_height);
+    } else {
+      imagecopyresized($dest, $src, 0, 0, 0, $src_height / 2 - $src_width / 2, $size, $size, $src_width, $src_width);
+    }
+    $filename .= '_' . $size . 'x' . $size;
+  } else {
+    $dest_width = $size;
+    $dest_height = round($size / ($src_width / $src_height));
+    $dest = imagecreatetruecolor($dest_width, $dest_height);
+    imagecopyresized($dest, $src, 0, 0, 0, 0, $dest_width, $dest_height, $src_width, $src_height);
+    $filename .= '_' . $dest_width . 'x' . $dest_height;
+  }
+
+  $functionSave = 'image' . $extension;
+  $functionSave($dest, "$dirname/$filename.$extension");
+}
+
+
+
+
+function sendReview(){
+  $fName = 'reviews.txt';
+
+  $name = $_POST['name'];
+  $review = $_POST['review'];
+  $time = time();
+
+  $reviews = [];
+  if(file_exists($fName)){
+    $reviews = json_decode( file_get_contents($fName) );
+  }
+
+  $reviews[] = compact('name', 'review', 'time');
+
+  $f = fopen($fName, 'w');
+  fwrite($f, json_encode($reviews));  // fputs()
+  fclose($f);
+  redirect('reviews');
 }
